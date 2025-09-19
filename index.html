@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的第一个网页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        nav ul li {
+            margin: 0 1rem;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        section {
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>欢迎来到我的网站</h1>
+        <nav>
+            <ul>
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section id="home">
+            <h2>首页</h2>
+            <p>这是我的第一个网页，用于学习 HTML、CSS 和 JavaScript。</p>
+            <button onclick="showMessage()">点击我</button>
+        </section>
+        
+        <section id="about">
+            <h2>关于我</h2>
+            <p>我是一名计算机科学专业的大二学生，正在学习 Web 开发。</p>
+            <ul>
+                <li>🐍 Python 编程</li>
+                <li>☕ Java 开发</li>
+                <li>🌐 Web 前端</li>
+                <li>📊 数据结构与算法</li>
+            </ul>
+        </section>
+        
+        <section id="contact">
+            <h2>学习进度</h2>
+            <p>记录我的学习历程：</p>
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; margin-top: 1rem;">
+                <h3>本周学习目标</h3>
+                <ul>
+                    <li>✅ 配置开发环境</li>
+                    <li>🔄 学习 Python 基础语法</li>
+                    <li>📝 练习算法题</li>
+                    <li>🌐 制作第一个网页</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 我的学习网站. 计科大二学生作品.</p>
+    </footer>
+    
+    <script>
+        function showMessage() {
+            const messages = [
+                '欢迎学习 Web 开发！',
+                'HTML 负责结构',
+                'CSS 负责样式',
+                'JavaScript 负责交互',
+                '继续加油学习！'
+            ];
+            
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            alert(randomMessage);
+            console.log('显示消息:', randomMessage);
+        }
+        
+        // 页面加载完成后的欢迎信息
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎉 欢迎来到我的学习网站！');
+            console.log('📅 当前时间:', new Date().toLocaleString('zh-CN'));
+        });
+    </script>
+</body>
+</html>

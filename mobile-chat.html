@@ -25,19 +25,25 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
             background: #f7f7f7;
             height: 100vh;
+            height: 100dvh; /* 动态视口高度 */
             overflow: hidden;
             position: fixed;
             width: 100%;
             -webkit-overflow-scrolling: touch;
+            margin: 0;
+            padding: 0;
         }
 
         .app-container {
             width: 100vw;
             height: 100vh;
+            height: 100dvh; /* 动态视口高度 */
             display: flex;
             flex-direction: column;
             background: #fff;
             position: relative;
+            max-width: 100%;
+            overflow: hidden;
         }
 
         /* 状态栏 */
@@ -88,16 +94,17 @@
 
         /* 底部导航 */
         .bottom-nav {
-            height: calc(60px + env(safe-area-inset-bottom, 0px));
+            height: calc(70px + env(safe-area-inset-bottom, 0px));
             background: #f8f8f8;
             border-top: 1px solid #e5e5e5;
             display: flex;
             justify-content: space-around;
             align-items: flex-start;
-            padding-top: 8px;
-            padding-bottom: env(safe-area-inset-bottom, 0px);
+            padding-top: 10px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
             position: relative;
             z-index: 1000;
+            min-height: 70px;
         }
 
         .nav-item {
@@ -105,10 +112,12 @@
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            padding: 8px 12px;
+            padding: 10px 15px;
             border-radius: 8px;
             transition: background-color 0.2s;
-            min-width: 60px;
+            min-width: 70px;
+            flex: 1;
+            max-width: 100px;
         }
 
         .nav-item:active {
@@ -120,12 +129,13 @@
         }
 
         .nav-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
+            font-size: 26px;
+            margin-bottom: 6px;
         }
 
         .nav-text {
-            font-size: 10px;
+            font-size: 11px;
+            font-weight: 500;
         }
 
         /* 聊天列表 */
@@ -229,6 +239,20 @@
             font-size: 18px;
             font-weight: 600;
             flex: 1;
+        }
+
+        .chat-settings-btn {
+            font-size: 20px;
+            margin-left: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+            color: #666;
+        }
+
+        .chat-settings-btn:active {
+            background-color: #e5e5e5;
         }
 
         .chat-messages {
@@ -556,19 +580,161 @@
             margin-left: 12px;
         }
 
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .modal-close:hover {
+            background-color: #f0f0f0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 改进的选择器样式 */
+        .config-input, select.config-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: white;
+        }
+
+        .config-input:focus, select.config-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 改进的按钮样式 */
+        .config-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .config-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .config-btn.secondary {
+            background: #f8f9fa;
+            color: #495057;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
         /* 响应式调整 */
         @media (max-width: 480px) {
             .message-content {
-                max-width: 80%;
+                max-width: 85%;
                 font-size: 15px;
             }
-            
+
             .chat-input {
-                padding: 8px 12px;
+                padding: 12px 16px;
+                padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
             }
-            
+
             .input-field {
                 font-size: 16px; /* 防止iOS缩放 */
+                padding: 12px 16px;
+            }
+
+            .nav-item {
+                padding: 8px 10px;
+                min-width: 60px;
+            }
+
+            .nav-icon {
+                font-size: 24px;
+            }
+
+            .nav-text {
+                font-size: 10px;
+            }
+
+            .api-config {
+                margin: 12px;
+                padding: 16px;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+                padding: 16px;
             }
         }
 
@@ -577,12 +743,110 @@
             .moments-header {
                 height: 120px;
             }
-            
+
             .user-avatar {
                 width: 40px;
                 height: 40px;
                 font-size: 18px;
             }
+
+            .bottom-nav {
+                height: calc(60px + env(safe-area-inset-bottom, 0px));
+                padding-top: 8px;
+            }
+
+            .nav-item {
+                padding: 6px 10px;
+            }
+
+            .nav-icon {
+                font-size: 22px;
+                margin-bottom: 4px;
+            }
+
+            .nav-text {
+                font-size: 10px;
+            }
+        }
+
+        /* 改进的主题选择器 */
+        .theme-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .theme-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px 10px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            background: #f8f9fa;
+        }
+
+        .theme-option:active {
+            transform: scale(0.95);
+        }
+
+        .theme-option.active {
+            background-color: #e7f3ff;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .theme-preview {
+            width: 60px;
+            height: 35px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }
+
+        /* 状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.online {
+            background: #07c160;
+        }
+
+        .status-indicator.offline {
+            background: #999;
+        }
+
+        /* 改进的信息卡片 */
+        .info-card {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-card-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-card-content {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -609,6 +873,7 @@
                 <div class="chat-header">
                     <div class="back-btn touch-feedback" onclick="showPage('chat-list-page')">←</div>
                     <div class="chat-title" id="chatTitle">角色名称</div>
+                    <div class="chat-settings-btn touch-feedback" onclick="showChatSettings()">⚙️</div>
                 </div>
                 <div class="chat-messages" id="chatMessages">
                     <!-- 聊天消息将通过 JavaScript 动态生成 -->
@@ -632,6 +897,92 @@
                 </div>
                 <div class="moments-list" id="momentsList">
                     <!-- 朋友圈内容将通过 JavaScript 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 聊天设置页面 -->
+            <div class="page" id="chat-settings-page">
+                <div class="chat-header">
+                    <div class="back-btn touch-feedback" onclick="showPage('chat-page')">←</div>
+                    <div class="chat-title">聊天设置</div>
+                </div>
+                <div class="settings-list">
+                    <!-- AI模型选择 -->
+                    <div class="api-config">
+                        <div class="config-title">🤖 AI模型选择</div>
+                        <select class="config-input" id="aiModel">
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                            <option value="claude-3-haiku">Claude 3 Haiku</option>
+                            <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                            <option value="claude-3-opus">Claude 3 Opus</option>
+                            <option value="gemini-pro">Gemini Pro</option>
+                            <option value="llama-2-70b">Llama 2 70B</option>
+                            <option value="mixtral-8x7b">Mixtral 8x7B</option>
+                            <option value="local-model">本地模型</option>
+                        </select>
+                        <button class="config-btn touch-feedback" onclick="saveAiModel()">保存模型</button>
+                    </div>
+
+                    <!-- 当前角色信息 -->
+                    <div class="api-config">
+                        <div class="config-title">🎭 当前角色</div>
+                        <div id="currentCharacterInfo" style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">角色名称</div>
+                            <div style="color: #666; font-size: 14px;">角色描述...</div>
+                        </div>
+                        <button class="config-btn touch-feedback" onclick="editCurrentCharacter()">编辑角色</button>
+                        <button class="config-btn touch-feedback" onclick="document.getElementById('charFileInput2').click()">导入新角色</button>
+                        <input type="file" id="charFileInput2" accept=".json,.png" style="display: none;" onchange="importCharacterForChat(event)">
+                    </div>
+
+                    <!-- 世界书管理 -->
+                    <div class="api-config">
+                        <div class="config-title">📚 世界书设置</div>
+                        <div id="worldBookStatus" style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">当前世界书</div>
+                            <div style="color: #666; font-size: 14px;">未加载世界书</div>
+                        </div>
+                        <button class="config-btn touch-feedback" onclick="document.getElementById('worldBookInput2').click()">导入世界书</button>
+                        <button class="config-btn touch-feedback" onclick="manageWorldBook()">管理世界书</button>
+                        <input type="file" id="worldBookInput2" accept=".json" style="display: none;" onchange="importWorldBookForChat(event)">
+                    </div>
+
+                    <!-- 聊天主题 */
+                    <div class="api-config">
+                        <div class="config-title">🎨 聊天主题</div>
+                        <div class="theme-selector">
+                            <div class="theme-option touch-feedback" onclick="changeTheme('default')">
+                                <div class="theme-preview" style="background: #f0f0f0;"></div>
+                                <span>默认</span>
+                            </div>
+                            <div class="theme-option touch-feedback" onclick="changeTheme('dark')">
+                                <div class="theme-preview" style="background: #2c2c2c;"></div>
+                                <span>暗黑</span>
+                            </div>
+                            <div class="theme-option touch-feedback" onclick="changeTheme('cute')">
+                                <div class="theme-preview" style="background: #ffe4e1;"></div>
+                                <span>可爱</span>
+                            </div>
+                            <div class="theme-option touch-feedback" onclick="changeTheme('business')">
+                                <div class="theme-preview" style="background: #f5f5f5;"></div>
+                                <span>商务</span>
+                            </div>
+                            <div class="theme-option touch-feedback" onclick="changeTheme('colorful')">
+                                <div class="theme-preview" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4);"></div>
+                                <span>彩色</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户人设 -->
+                    <div class="api-config">
+                        <div class="config-title">👤 用户人设</div>
+                        <input type="text" class="config-input" id="userName2" placeholder="你的名字">
+                        <textarea class="config-input" id="userPersona2" placeholder="描述你的性格、背景、喜好等..." rows="3"></textarea>
+                        <button class="config-btn touch-feedback" onclick="saveUserPersonaFromChat()">保存人设</button>
+                    </div>
                 </div>
             </div>
 

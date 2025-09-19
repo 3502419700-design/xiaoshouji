@@ -15,8 +15,21 @@ class MobileChatApp {
             url: 'http://localhost:8000',
             key: ''
         };
+        this.aiModel = 'gpt-3.5-turbo';
+        this.availableModels = [
+            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI' },
+            { id: 'gpt-4', name: 'GPT-4', provider: 'OpenAI' },
+            { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'OpenAI' },
+            { id: 'claude-3-haiku', name: 'Claude 3 Haiku', provider: 'Anthropic' },
+            { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', provider: 'Anthropic' },
+            { id: 'claude-3-opus', name: 'Claude 3 Opus', provider: 'Anthropic' },
+            { id: 'gemini-pro', name: 'Gemini Pro', provider: 'Google' },
+            { id: 'llama-2-70b', name: 'Llama 2 70B', provider: 'Meta' },
+            { id: 'mixtral-8x7b', name: 'Mixtral 8x7B', provider: 'Mistral' },
+            { id: 'local-model', name: '本地模型', provider: 'Local' }
+        ];
         this.deferredPrompt = null;
-        
+
         this.init();
     }
 
@@ -27,6 +40,7 @@ class MobileChatApp {
         this.loadUserPersona();
         this.loadWorldBook();
         this.loadTheme();
+        this.loadAiModel();
         this.initializeCharacters();
         this.renderChatList();
         this.renderMoments();
@@ -392,27 +406,36 @@ class MobileChatApp {
     // 调用 SillyTavern API
     async callSillyTavernAPI(message) {
         const apiUrl = this.apiConfig.url;
-        
+
         try {
+            const requestBody = {
+                model: this.aiModel,
+                character: this.currentCharacter.name,
+                character_data: this.currentCharacter,
+                message: message,
+                user_persona: this.userPersona,
+                world_book: this.worldBook,
+                history: this.chatHistory[this.currentCharacter.id] || [],
+                max_tokens: 2048,
+                temperature: 0.8,
+                top_p: 0.9,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0
+            };
+
             const response = await fetch(`${apiUrl}/api/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': this.apiConfig.key ? `Bearer ${this.apiConfig.key}` : ''
+                    'Authorization': this.apiConfig.key ? `Bearer ${this.apiConfig.key}` : '',
+                    'X-API-Model': this.aiModel
                 },
-                body: JSON.stringify({
-                    character: this.currentCharacter.name,
-                    character_data: this.currentCharacter,
-                    message: message,
-                    user_persona: this.userPersona,
-                    world_book: this.worldBook,
-                    history: this.chatHistory[this.currentCharacter.id] || []
-                })
+                body: JSON.stringify(requestBody)
             });
 
             if (response.ok) {
                 const data = await response.json();
-                return data.response || data.message || '收到你的消息了！';
+                return data.response || data.message || data.choices?.[0]?.message?.content || '收到你的消息了！';
             } else {
                 throw new Error(`API错误: ${response.status}`);
             }
@@ -484,6 +507,248 @@ class MobileChatApp {
         document.getElementById('currentTime').textContent = timeString;
     }
 
+    // 显示聊天设置页面
+    showChatSettings() {
+        this.updateChatSettingsInfo();
+        this.showPage('chat-settings-page');
+    }
+
+    // 更新聊天设置信息
+    updateChatSettingsInfo() {
+        // 更新当前角色信息
+        if (this.currentCharacter) {
+            const charInfo = document.getElementById('currentCharacterInfo');
+            charInfo.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;">
+                    <span class="status-indicator ${this.currentCharacter.online ? 'online' : 'offline'}"></span>
+                    ${this.currentCharacter.name}
+                </div>
+                <div style="color: #666; font-size: 14px;">${this.currentCharacter.description || '暂无描述'}</div>
+            `;
+        }
+
+        // 更新世界书状态
+        const worldBookStatus = document.getElementById('worldBookStatus');
+        if (this.worldBook && this.worldBook.length > 0) {
+            worldBookStatus.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 8px;">当前世界书</div>
+                <div style="color: #666; font-size: 14px;">已加载 ${this.worldBook.length} 个条目</div>
+            `;
+        } else {
+            worldBookStatus.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 8px;">当前世界书</div>
+                <div style="color: #666; font-size: 14px;">未加载世界书</div>
+            `;
+        }
+
+        // 更新用户人设输入框
+        document.getElementById('userName2').value = this.userPersona.name || '';
+        document.getElementById('userPersona2').value = this.userPersona.description || '';
+
+        // 更新AI模型选择
+        document.getElementById('aiModel').value = this.aiModel;
+
+        // 更新主题选择
+        this.updateThemeSelection();
+    }
+
+    // 更新主题选择状态
+    updateThemeSelection() {
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.classList.remove('active');
+        });
+
+        const currentThemeOption = document.querySelector(`[onclick="changeTheme('${this.currentTheme}')"]`);
+        if (currentThemeOption) {
+            currentThemeOption.classList.add('active');
+        }
+    }
+
+    // 保存AI模型选择
+    saveAiModel() {
+        const selectedModel = document.getElementById('aiModel').value;
+        this.aiModel = selectedModel;
+        localStorage.setItem('aiModel', selectedModel);
+
+        const modelInfo = this.availableModels.find(m => m.id === selectedModel);
+        this.showToast(`已切换到 ${modelInfo ? modelInfo.name : selectedModel}`);
+    }
+
+    // 加载AI模型设置
+    loadAiModel() {
+        const saved = localStorage.getItem('aiModel');
+        if (saved) {
+            this.aiModel = saved;
+        }
+    }
+
+    // 从聊天页面保存用户人设
+    saveUserPersonaFromChat() {
+        const name = document.getElementById('userName2').value.trim();
+        const description = document.getElementById('userPersona2').value.trim();
+
+        this.userPersona = {
+            name: name || '用户',
+            description: description
+        };
+
+        localStorage.setItem('userPersona', JSON.stringify(this.userPersona));
+
+        // 同步到主设置页面
+        const mainUserName = document.getElementById('userName');
+        const mainUserPersona = document.getElementById('userPersona');
+        if (mainUserName) mainUserName.value = this.userPersona.name;
+        if (mainUserPersona) mainUserPersona.value = this.userPersona.description;
+
+        this.showToast('用户人设已保存！');
+    }
+
+    // 为聊天导入角色
+    importCharacterForChat(event) {
+        this.importCharacter(event, true);
+    }
+
+    // 为聊天导入世界书
+    importWorldBookForChat(event) {
+        this.importWorldBook(event, true);
+    }
+
+    // 编辑当前角色
+    editCurrentCharacter() {
+        if (!this.currentCharacter) {
+            this.showToast('请先选择一个角色');
+            return;
+        }
+
+        // 创建角色编辑模态框
+        this.showCharacterEditModal(this.currentCharacter);
+    }
+
+    // 显示角色编辑模态框
+    showCharacterEditModal(character) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">编辑角色</div>
+                    <div class="modal-close" onclick="this.closest('.modal').remove()">×</div>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">角色名称</label>
+                    <input type="text" class="config-input" id="editCharName" value="${character.name}" placeholder="角色名称">
+
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">角色描述</label>
+                    <textarea class="config-input" id="editCharDesc" rows="3" placeholder="角色描述">${character.description || ''}</textarea>
+
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">角色头像 (emoji)</label>
+                    <input type="text" class="config-input" id="editCharAvatar" value="${character.avatar}" placeholder="😊">
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="config-btn" onclick="window.mobileApp.saveCharacterEdit('${character.id}'); this.closest('.modal').remove();">保存</button>
+                        <button class="config-btn secondary" onclick="this.closest('.modal').remove();">取消</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+    }
+
+    // 保存角色编辑
+    saveCharacterEdit(characterId) {
+        const name = document.getElementById('editCharName').value.trim();
+        const description = document.getElementById('editCharDesc').value.trim();
+        const avatar = document.getElementById('editCharAvatar').value.trim();
+
+        if (!name) {
+            this.showToast('请输入角色名称');
+            return;
+        }
+
+        // 更新角色信息
+        const character = this.characters.find(c => c.id === characterId);
+        if (character) {
+            character.name = name;
+            character.description = description;
+            character.avatar = avatar || character.avatar;
+
+            // 如果是当前角色，更新显示
+            if (this.currentCharacter && this.currentCharacter.id === characterId) {
+                this.currentCharacter = character;
+                document.getElementById('chatTitle').textContent = character.name;
+            }
+
+            this.saveCharacters();
+            this.renderChatList();
+            this.updateChatSettingsInfo();
+            this.showToast('角色信息已更新！');
+        }
+    }
+
+    // 管理世界书
+    manageWorldBook() {
+        if (!this.worldBook || this.worldBook.length === 0) {
+            this.showToast('请先导入世界书');
+            return;
+        }
+
+        this.showWorldBookModal();
+    }
+
+    // 显示世界书管理模态框
+    showWorldBookModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+
+        let entriesHtml = '';
+        this.worldBook.forEach((entry, index) => {
+            entriesHtml += `
+                <div class="info-card" style="margin-bottom: 10px;">
+                    <div class="info-card-title">${entry.keys ? entry.keys.join(', ') : '无关键词'}</div>
+                    <div class="info-card-content">${(entry.content || entry.description || '无内容').substring(0, 100)}...</div>
+                    <button class="config-btn secondary" style="margin-top: 10px; padding: 8px 16px; font-size: 14px;" onclick="window.mobileApp.removeWorldBookEntry(${index}); this.closest('.modal').remove(); window.mobileApp.manageWorldBook();">删除</button>
+                </div>
+            `;
+        });
+
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">世界书管理</div>
+                    <div class="modal-close" onclick="this.closest('.modal').remove()">×</div>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    ${entriesHtml}
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="config-btn secondary" onclick="window.mobileApp.clearWorldBook(); this.closest('.modal').remove();">清空世界书</button>
+                    <button class="config-btn" onclick="this.closest('.modal').remove();">关闭</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+    }
+
+    // 删除世界书条目
+    removeWorldBookEntry(index) {
+        this.worldBook.splice(index, 1);
+        localStorage.setItem('worldBook', JSON.stringify(this.worldBook));
+        this.updateChatSettingsInfo();
+        this.showToast('世界书条目已删除');
+    }
+
+    // 清空世界书
+    clearWorldBook() {
+        this.worldBook = [];
+        localStorage.setItem('worldBook', JSON.stringify(this.worldBook));
+        this.updateChatSettingsInfo();
+        this.showToast('世界书已清空');
+    }
+
     // 页面切换
     showPage(pageId) {
         document.querySelectorAll('.page').forEach(page => {
@@ -508,9 +773,9 @@ class MobileChatApp {
         }
 
         // 移动端优化：页面切换时重置输入框
-        if (pageId !== 'chat-page') {
+        if (pageId !== 'chat-page' && pageId !== 'chat-settings-page') {
             const messageInput = document.getElementById('messageInput');
-            messageInput.blur();
+            if (messageInput) messageInput.blur();
         }
     }
 
@@ -586,9 +851,142 @@ class MobileChatApp {
         URL.revokeObjectURL(url);
     }
 
+    // 导入角色（支持从不同页面调用）
+    async importCharacter(event, fromChatSettings = false) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            let characterData;
+
+            if (file.type === 'application/json') {
+                const text = await file.text();
+                characterData = JSON.parse(text);
+            } else if (file.type.startsWith('image/')) {
+                // 处理PNG格式的角色卡片
+                characterData = await this.extractCharacterFromPNG(file);
+            } else {
+                throw new Error('不支持的文件格式');
+            }
+
+            // 验证角色数据
+            if (!characterData.name) {
+                throw new Error('角色数据缺少名称');
+            }
+
+            // 创建新角色
+            const newCharacter = {
+                id: 'char_' + Date.now(),
+                name: characterData.name,
+                avatar: characterData.avatar || '🎭',
+                description: characterData.description || characterData.personality || '',
+                lastMessage: '你好！很高兴认识你！',
+                lastTime: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                online: true,
+                data: characterData
+            };
+
+            // 添加到角色列表
+            this.characters.push(newCharacter);
+            this.chatHistory[newCharacter.id] = [];
+
+            this.saveCharacters();
+            this.renderChatList();
+
+            if (fromChatSettings) {
+                // 如果从聊天设置导入，直接切换到新角色
+                this.currentCharacter = newCharacter;
+                document.getElementById('chatTitle').textContent = newCharacter.name;
+                this.updateChatSettingsInfo();
+                this.renderChatMessages();
+                this.showToast(`已导入角色：${newCharacter.name}`);
+            } else {
+                this.showToast(`角色 ${newCharacter.name} 导入成功！`);
+            }
+
+        } catch (error) {
+            console.error('导入角色失败:', error);
+            this.showToast('导入失败：' + error.message);
+        }
+
+        // 清空文件输入
+        event.target.value = '';
+    }
+
+    // 导入世界书（支持从不同页面调用）
+    async importWorldBook(event, fromChatSettings = false) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const worldBookData = JSON.parse(text);
+
+            if (Array.isArray(worldBookData)) {
+                this.worldBook = worldBookData;
+            } else if (worldBookData.entries) {
+                this.worldBook = worldBookData.entries;
+            } else {
+                throw new Error('无效的世界书格式');
+            }
+
+            localStorage.setItem('worldBook', JSON.stringify(this.worldBook));
+
+            if (fromChatSettings) {
+                this.updateChatSettingsInfo();
+            }
+
+            this.showToast(`世界书导入成功！包含 ${this.worldBook.length} 个条目`);
+
+        } catch (error) {
+            console.error('导入世界书失败:', error);
+            this.showToast('导入失败：' + error.message);
+        }
+
+        // 清空文件输入
+        event.target.value = '';
+    }
+
+    // 从PNG提取角色数据
+    async extractCharacterFromPNG(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const uint8Array = new Uint8Array(arrayBuffer);
+
+                    // 查找PNG文本块中的角色数据
+                    let textData = '';
+                    for (let i = 0; i < uint8Array.length - 4; i++) {
+                        if (uint8Array[i] === 0x74 && uint8Array[i+1] === 0x45 &&
+                            uint8Array[i+2] === 0x58 && uint8Array[i+3] === 0x74) {
+                            // 找到tEXt块，提取数据
+                            const length = (uint8Array[i-4] << 24) | (uint8Array[i-3] << 16) |
+                                         (uint8Array[i-2] << 8) | uint8Array[i-1];
+                            const textBytes = uint8Array.slice(i+4, i+4+length);
+                            textData = new TextDecoder().decode(textBytes);
+                            break;
+                        }
+                    }
+
+                    if (textData) {
+                        const characterData = JSON.parse(textData);
+                        resolve(characterData);
+                    } else {
+                        reject(new Error('PNG文件中未找到角色数据'));
+                    }
+                } catch (error) {
+                    reject(new Error('解析PNG角色数据失败'));
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
     // 简化版的其他方法
     loadMoments() { this.moments = JSON.parse(localStorage.getItem('moments') || '[]'); }
-    loadUserPersona() { 
+    loadUserPersona() {
         const saved = localStorage.getItem('userPersona');
         if (saved) this.userPersona = JSON.parse(saved);
     }
@@ -596,16 +994,21 @@ class MobileChatApp {
     loadTheme() { this.currentTheme = localStorage.getItem('currentTheme') || 'default'; }
     renderMoments() { /* 简化实现 */ }
     addToMoments() { /* 简化实现 */ }
-    saveUserPersona() { 
-        const name = document.getElementById('userName').value.trim();
-        const description = document.getElementById('userPersona').value.trim();
-        this.userPersona = { name: name || '用户', description };
-        localStorage.setItem('userPersona', JSON.stringify(this.userPersona));
-        this.showToast('用户人设已保存！');
+    saveUserPersona() {
+        const userName = document.getElementById('userName');
+        const userPersona = document.getElementById('userPersona');
+        if (userName && userPersona) {
+            const name = userName.value.trim();
+            const description = userPersona.value.trim();
+            this.userPersona = { name: name || '用户', description };
+            localStorage.setItem('userPersona', JSON.stringify(this.userPersona));
+            this.showToast('用户人设已保存！');
+        }
     }
     changeTheme(theme) {
         this.currentTheme = theme;
         localStorage.setItem('currentTheme', theme);
+        this.updateThemeSelection();
         this.showToast(`已切换到${theme}主题`);
     }
 }
@@ -622,6 +1025,13 @@ function clearChatHistory() { window.mobileApp.clearChatHistory(); }
 function exportChatHistory() { window.mobileApp.exportChatHistory(); }
 function hideInstallPrompt() { window.mobileApp.hideInstallPrompt(); }
 function installPWA() { window.mobileApp.installPWA(); }
+function showChatSettings() { window.mobileApp.showChatSettings(); }
+function saveAiModel() { window.mobileApp.saveAiModel(); }
+function saveUserPersonaFromChat() { window.mobileApp.saveUserPersonaFromChat(); }
+function editCurrentCharacter() { window.mobileApp.editCurrentCharacter(); }
+function manageWorldBook() { window.mobileApp.manageWorldBook(); }
+function importCharacterForChat(event) { window.mobileApp.importCharacterForChat(event); }
+function importWorldBookForChat(event) { window.mobileApp.importWorldBookForChat(event); }
 
 // 处理输入框回车事件
 document.addEventListener('DOMContentLoaded', () => {
